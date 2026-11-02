@@ -4,3 +4,6 @@ run_all.log
 # examples
 examples/CNN_test/builds/
 examples/GEMM_test/builds/
+
+#pycache
+hwflow/__pycache__/
