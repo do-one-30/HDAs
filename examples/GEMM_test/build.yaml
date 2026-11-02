@@ -1,0 +1,43 @@
+# hwflow build config for one design. Relative paths are relative to this file.
+name: gemm                       # output name: overlay/gemm.bit, gemm.hwh
+top: gemm                        # HLS top function
+
+# ---- HLS -------------------------------------------------------------------
+sources: [gemm.cc]              # list or glob
+headers: [gemm.h]
+testbench: [gemm_tb.cc]       # needed for csim/cosim only
+# include_dirs: [src]            # default: folders of sources + headers
+# cflags: -DUSE_FLOAT            # extra compile flags for the kernel
+# hls_directives: [directives.tcl]   # sourced after create_clock
+part: xczu7ev-ffvc1156-2-e
+clock_mhz: 100                   # HLS period, PL clock in Vivado and FCLK0 on the board
+steps: [csim, csynth, export]    # add cosim when needed (slow)
+tb_args: "--data-dir {root}/golden"   # {root} = folder of this file
+# hls_max_util_pct: 100          # stop before Vivado if a csynth estimate exceeds this % (or {LUT: 90, default: 100})
+
+# ---- Vivado ----------------------------------------------------------------
+vivado:
+  jobs: 16
+  # hp_ports: 1                 # m_axi ports spread over HP0..HP(n-1); 1 = all into HP0 like GPT2.tcl
+  # bd_tcl: bd/GPT2.tcl          # use your own block design instead of the automatic one
+  # override_clock: true         # with bd_tcl: set its PL0 clock to clock_mhz
+  # bd_name: design_1            # name of the automatic block design
+  # allow_timing_fail: false     # true = keep going when WNS/WHS < 0
+
+# ---- board (ZCU104 with PYNQ + your own application) ---------------------------
+board:
+  host: pynq                     # ssh target: a Host alias in ~/.ssh/config, or user@address
+  # port: 2222                   # leave out to use the Port in ~/.ssh/config (otherwise 22)
+  # identity_file: ~/.ssh/pynq_id_key   # leave out to use IdentityFile in ~/.ssh/config
+  work_dir: /home/xilinx/jupyter_notebooks/dwkwon/Hadware_Design_Automation_test/gemm_test     # <work_dir>/<build_id>/overlay (bit, hwh, hw.h) and /results
+  app_dir: /home/xilinx/jupyter_notebooks/dwkwon/Hadware_Design_Automation_test/gemm_test   # the command runs in this folder
+  # placeholders: {bit} {hwh} {hw_h} {overlay} {results} {build_id} {bit_md5} {clock_mhz} {name} {top}
+  # (also given as env vars HWFLOW_BIT, HWFLOW_RESULTS, ...)
+  command: python3 run_gemm.py --bit {bit} --out {results} --build-id {build_id} --bit-md5 {bit_md5}
+  setup: source /etc/profile.d/pynq_venv.sh && source /etc/profile.d/xrt_setup.sh   # runs before command (PYNQ 2.7+/3.x venv)
+  sudo: true                  # default: false for root@, true otherwise (needs NOPASSWD)
+  # timeout_s: 21600
+
+# tools:
+#   vitis_hls: vitis_hls         # or a full path
+#   vivado: vivado

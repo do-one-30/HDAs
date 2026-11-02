@@ -1,0 +1,30 @@
+# hwflow build config: float32 conv2d layer on ZCU104. Relative paths are relative to this file.
+name: conv2d
+top: conv2d
+
+# ---- HLS -------------------------------------------------------------------
+sources: [conv2d.cc]
+headers: [conv2d.h]
+testbench: [conv2d_tb.cc]     # csim: 5 layer shapes vs a double reference, returns 1 on failure
+part: xczu7ev-ffvc1156-2-e
+clock_mhz: 100
+steps: [csim, csynth, export]
+# hls_max_util_pct: 100
+
+# ---- Vivado ----------------------------------------------------------------
+vivado:
+  jobs: 16
+  hp_ports: 2                    # 4 m_axi: in, bias -> HP0 / wgt, out -> HP1 (round-robin)
+
+# ---- board -----------------------------------------------------------------
+board:
+  host: pynq                     # or user@address with port / identity_file
+  work_dir: /home/xilinx/jupyter_notebooks/dwkwon/Hadware_Design_Automation_test/cnn_test
+  app_dir: /home/xilinx/jupyter_notebooks/dwkwon/Hadware_Design_Automation_test/cnn_test
+  setup: source /etc/profile.d/pynq_venv.sh && source /etc/profile.d/xrt_setup.sh
+  sudo: true
+  command: >-
+    python3 run_conv.py --bit {bit} --out {results}
+    --build-id {build_id} --bit-md5 {bit_md5} --clock-mhz {clock_mhz}
+    --layers conv1,res2,res3,res4
+  timeout_s: 3600
