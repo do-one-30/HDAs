@@ -1,4 +1,4 @@
-# hwflow: HLS → Vivado → ZCU104 measurement automation (server side)
+# HDAs: Hardware Design Automation scripts
 
 One `build.yaml` per design drives these stages in order:
 
